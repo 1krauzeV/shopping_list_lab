@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def create_database():
-    # Файл базы данных будет рядом с database.py
+    # Файл базы данных находится рядом с database.py
     db_path = Path(__file__).with_name("purchases.db")
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
@@ -39,16 +39,33 @@ def add_purchase(name, quantity):
 
 
 def get_purchases():
-    # Получаем все покупки из базы данных
+    # Получаем покупки вместе с их номером и статусом
     db_path = Path(__file__).with_name("purchases.db")
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
 
-    cursor.execute("SELECT name, quantity FROM purchases ORDER BY id")
+    cursor.execute(
+        "SELECT id, name, quantity, is_bought FROM purchases ORDER BY id"
+    )
     purchases = cursor.fetchall()
 
     connection.close()
     return purchases
+
+
+def mark_purchase(purchase_id):
+    # Отмечаем выбранную покупку как купленную
+    db_path = Path(__file__).with_name("purchases.db")
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "UPDATE purchases SET is_bought = 1 WHERE id = ?",
+        (purchase_id,)
+    )
+
+    connection.commit()
+    connection.close()
 
 
 if __name__ == "__main__":

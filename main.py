@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from database import create_database, add_purchase, get_purchases
+from database import create_database, add_purchase, get_purchases, mark_purchase
 
 # Убеждаемся, что таблица в базе данных существует
 create_database()
@@ -8,7 +8,7 @@ create_database()
 # Создаём главное окно
 window = tk.Tk()
 window.title("Мой список покупок")
-window.geometry("520x420")
+window.geometry("520x460")
 
 # Заголовок
 title_label = tk.Label(
@@ -35,9 +35,10 @@ def refresh_list():
     # Убираем старые строки из списка на экране
     shopping_list.delete(0, tk.END)
 
-    # Берём сохранённые покупки и показываем их в окне
-    for name, quantity in get_purchases():
-        shopping_list.insert(tk.END, f"{name} — {quantity} шт.")
+    # Берём покупки из базы и показываем их статус
+    for purchase_id, name, quantity, is_bought in get_purchases():
+        status = "КУПЛЕНО" if is_bought == 1 else "Нужно купить"
+        shopping_list.insert(tk.END, f"{name} — {quantity} шт. [{status}]")
 
 
 def add_product():
@@ -60,11 +61,40 @@ def add_product():
     quantity_entry.delete(0, tk.END)
 
 
+def mark_selected_purchase():
+    # Узнаём, какую строку пользователь выбрал мышкой
+    selected_indices = shopping_list.curselection()
+
+    if not selected_indices:
+        messagebox.showwarning("Не выбрана покупка", "Сначала выберите товар в списке.")
+        return
+
+    # Получаем запись с тем же порядковым номером из базы
+    selected_purchase = get_purchases()[selected_indices[0]]
+    purchase_id = selected_purchase[0]
+    is_bought = selected_purchase[3]
+
+    if is_bought == 1:
+        messagebox.showinfo("Уже куплено", "Этот товар уже отмечен как купленный.")
+        return
+
+    # Меняем статус в базе и обновляем список на экране
+    mark_purchase(purchase_id)
+    refresh_list()
+
+
 add_button = tk.Button(window, text="Добавить", command=add_product)
 add_button.pack(pady=10)
 
-shopping_list = tk.Listbox(window, width=42, height=8)
+shopping_list = tk.Listbox(window, width=52, height=8)
 shopping_list.pack(pady=10)
+
+mark_button = tk.Button(
+    window,
+    text="Отметить как купленное",
+    command=mark_selected_purchase
+)
+mark_button.pack(pady=5)
 
 # При запуске показываем ранее сохранённые покупки
 refresh_list()
