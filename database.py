@@ -1,4 +1,3 @@
-
 import sqlite3
 from pathlib import Path
 
@@ -22,6 +21,34 @@ def create_database():
     connection.commit()
     connection.close()
     print("База данных готова!")
+
+
+def add_purchase(name, quantity):
+    # Сохраняем новую покупку в таблицу
+    db_path = Path(__file__).with_name("purchases.db")
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "INSERT INTO purchases (name, quantity) VALUES (?, ?)",
+        (name, quantity)
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_purchases():
+    # Получаем все покупки из базы данных
+    db_path = Path(__file__).with_name("purchases.db")
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT name, quantity FROM purchases ORDER BY id")
+    purchases = cursor.fetchall()
+
+    connection.close()
+    return purchases
 
 
 if __name__ == "__main__":
