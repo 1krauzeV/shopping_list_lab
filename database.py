@@ -41,7 +41,6 @@ def add_purchase(name, quantity):
 def get_purchases():
     # Получаем покупки вместе с их номером и статусом
     db_path = Path(__file__).with_name("purchases.db")
-    db_path = Path(__file__).with_name("purchases.db")
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
 

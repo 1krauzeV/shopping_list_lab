@@ -8,7 +8,7 @@ create_database()
 # Создаём главное окно
 window = tk.Tk()
 window.title("Мой список покупок")
-window.geometry("520x500")
+window.geometry("520x540")
 
 # Заголовок
 title_label = tk.Label(
@@ -30,15 +30,43 @@ quantity_label.pack()
 quantity_entry = tk.Entry(window, width=35)
 quantity_entry.pack(pady=(0, 12))
 
+# Переключатель сортировки и список показанных покупок
+sort_alphabetically = tk.BooleanVar(value=False)
+visible_purchases = []
+
+
+def get_purchase_name(purchase):
+    # Из записи берём название, не учитывая заглавные буквы
+    return purchase[1].casefold()
+
 
 def refresh_list():
     # Убираем старые строки из списка на экране
     shopping_list.delete(0, tk.END)
 
-    # Берём покупки из базы и показываем их статус
-    for purchase_id, name, quantity, is_bought in get_purchases():
+    # Читаем записи из базы и запоминаем порядок на экране
+    visible_purchases.clear()
+    visible_purchases.extend(get_purchases())
+
+    # При необходимости сортируем список по названию
+    if sort_alphabetically.get():
+        visible_purchases.sort(key=get_purchase_name)
+
+    for purchase_id, name, quantity, is_bought in visible_purchases:
         status = "КУПЛЕНО" if is_bought == 1 else "Нужно купить"
         shopping_list.insert(tk.END, f"{name} — {quantity} шт. [{status}]")
+
+
+def toggle_sort():
+    # Меняем режим: по алфавиту или по времени добавления
+    sort_alphabetically.set(not sort_alphabetically.get())
+
+    if sort_alphabetically.get():
+        sort_button.config(text="Показать в порядке добавления")
+    else:
+        sort_button.config(text="Сортировать по алфавиту")
+
+    refresh_list()
 
 
 def add_product():
@@ -69,8 +97,8 @@ def mark_selected_purchase():
         messagebox.showwarning("Не выбрана покупка", "Сначала выберите товар в списке.")
         return
 
-    # Получаем запись с тем же порядковым номером из базы
-    selected_purchase = get_purchases()[selected_indices[0]]
+    # Берём именно ту запись, которую пользователь видит на экране
+    selected_purchase = visible_purchases[selected_indices[0]]
     purchase_id = selected_purchase[0]
     is_bought = selected_purchase[3]
 
@@ -92,7 +120,7 @@ def delete_selected_purchase():
         return
 
     # Получаем id и название выбранной покупки
-    selected_purchase = get_purchases()[selected_indices[0]]
+    selected_purchase = visible_purchases[selected_indices[0]]
     purchase_id = selected_purchase[0]
     product_name = selected_purchase[1]
 
@@ -115,6 +143,13 @@ add_button.pack(pady=10)
 
 shopping_list = tk.Listbox(window, width=52, height=8)
 shopping_list.pack(pady=10)
+
+sort_button = tk.Button(
+    window,
+    text="Сортировать по алфавиту",
+    command=toggle_sort
+)
+sort_button.pack(pady=5)
 
 mark_button = tk.Button(
     window,
