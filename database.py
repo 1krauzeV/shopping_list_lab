@@ -41,6 +41,7 @@ def add_purchase(name, quantity):
 def get_purchases():
     # Получаем покупки вместе с их номером и статусом
     db_path = Path(__file__).with_name("purchases.db")
+    db_path = Path(__file__).with_name("purchases.db")
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
 
@@ -61,6 +62,21 @@ def mark_purchase(purchase_id):
 
     cursor.execute(
         "UPDATE purchases SET is_bought = 1 WHERE id = ?",
+        (purchase_id,)
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def delete_purchase(purchase_id):
+    # Удаляем только запись с нужным id
+    db_path = Path(__file__).with_name("purchases.db")
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "DELETE FROM purchases WHERE id = ?",
         (purchase_id,)
     )
 

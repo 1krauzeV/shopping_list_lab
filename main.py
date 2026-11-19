@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from database import create_database, add_purchase, get_purchases, mark_purchase
+from database import create_database, add_purchase, get_purchases, mark_purchase, delete_purchase
 
 # Убеждаемся, что таблица в базе данных существует
 create_database()
@@ -8,7 +8,7 @@ create_database()
 # Создаём главное окно
 window = tk.Tk()
 window.title("Мой список покупок")
-window.geometry("520x460")
+window.geometry("520x500")
 
 # Заголовок
 title_label = tk.Label(
@@ -83,6 +83,33 @@ def mark_selected_purchase():
     refresh_list()
 
 
+def delete_selected_purchase():
+    # Узнаём, какую строку пользователь выбрал мышкой
+    selected_indices = shopping_list.curselection()
+
+    if not selected_indices:
+        messagebox.showwarning("Не выбрана покупка", "Сначала выберите товар в списке.")
+        return
+
+    # Получаем id и название выбранной покупки
+    selected_purchase = get_purchases()[selected_indices[0]]
+    purchase_id = selected_purchase[0]
+    product_name = selected_purchase[1]
+
+    # Спрашиваем разрешение перед удалением
+    confirmed = messagebox.askyesno(
+        "Подтверждение удаления",
+        f"Удалить товар «{product_name}» из списка?"
+    )
+
+    if not confirmed:
+        return
+
+    # Удаляем запись из SQLite и обновляем список
+    delete_purchase(purchase_id)
+    refresh_list()
+
+
 add_button = tk.Button(window, text="Добавить", command=add_product)
 add_button.pack(pady=10)
 
@@ -95,6 +122,13 @@ mark_button = tk.Button(
     command=mark_selected_purchase
 )
 mark_button.pack(pady=5)
+
+delete_button = tk.Button(
+    window,
+    text="Удалить выбранный товар",
+    command=delete_selected_purchase
+)
+delete_button.pack(pady=5)
 
 # При запуске показываем ранее сохранённые покупки
 refresh_list()
